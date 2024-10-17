@@ -1,0 +1,12 @@
+elasticsearch:
+  host: localhost
+  port: 9200
+
+spring:
+  session:
+    timeout: 86000
+  data:
+    redis:
+      host: 10.30.10.19
+      port: 6379
+      password: 1234

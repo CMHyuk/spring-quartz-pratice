@@ -1,0 +1,17 @@
+POST http://localhost:8080/schedule-job
+Content-Type: application/json
+
+{
+  "jobName" : "memberDeleteJob",
+  "cronExpression" : "*/30 * * * * ?",
+  "jobClass" : "com.example.quartz.member.MemberDeleteJobExecutor",
+  "triggerName" : "memberDeleteTrigger"
+}
+
+### CronExpression 업데이트
+POST http://localhost:8080/quartz-scheduler?triggerName=memberSaveTrigger
+Content-Type: application/json
+
+{
+  "cronExpression": "*/1 * * * * ?"
+}

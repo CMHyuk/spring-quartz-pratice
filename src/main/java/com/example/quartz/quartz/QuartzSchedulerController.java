@@ -1,10 +1,9 @@
 package com.example.quartz.quartz;
 
 import com.example.quartz.schedulejob.ScheduleJob;
-import com.example.quartz.schedulejob.ScheduleJobRepository;
-import jakarta.persistence.EntityNotFoundException;
+import com.example.quartz.schedulejob.ScheduleJobService;
+import com.example.quartz.schedulejob.UpdateCronExpressionRequest;
 import lombok.RequiredArgsConstructor;
-import org.quartz.*;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -14,32 +13,17 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class QuartzSchedulerController {
 
-    private final ScheduleJobRepository scheduleJobRepository;
-    private final Scheduler scheduler;
+    private final ScheduleJobService scheduleJobService;
+    private final TriggerManager triggerManager;
 
-    @PostMapping("/quartz-scheduler")
-    public void changeScheduleJob(@RequestParam String triggerName, @RequestBody UpdateCronExpressionRequest request) throws SchedulerException {
-        ScheduleJob scheduleJob = scheduleJobRepository.findByTriggerName(triggerName)
-                .orElseThrow(EntityNotFoundException::new);
+    @PostMapping("/quartz-trigger")
+    public void changeScheduleJob(@RequestParam String triggerName, @RequestBody UpdateCronExpressionRequest request) {
+        String cronExpression = request.cronExpression();
 
-        scheduleJob.updateCronExpression(request.cronExpression());
+        ScheduleJob scheduleJob = scheduleJobService.updateCronExpression(triggerName, cronExpression);
+        scheduleJobService.save(scheduleJob);
 
-        TriggerKey triggerKey = TriggerKey.triggerKey(triggerName, "DEFAULT");
-
-        Trigger oldTrigger = scheduler.getTrigger(triggerKey);
-        if (oldTrigger == null) {
-            throw new SchedulerException("트리거를 찾을 수 없습니다: " + triggerName);
-        }
-
-        Trigger newTrigger = TriggerBuilder.newTrigger()
-                .withIdentity(oldTrigger.getKey())
-                .withSchedule(CronScheduleBuilder.cronSchedule(request.cronExpression()).withMisfireHandlingInstructionDoNothing())
-
-                .forJob(oldTrigger.getJobKey())
-                .build();
-
-        scheduleJobRepository.save(scheduleJob);
-        scheduler.rescheduleJob(triggerKey, newTrigger);
+        triggerManager.updateTrigger(triggerName, cronExpression);
     }
 
 }

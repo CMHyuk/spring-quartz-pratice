@@ -9,7 +9,7 @@ Content-Type: application/json
 }
 
 ### CronExpression 업데이트
-POST http://localhost:8080/quartz-scheduler?triggerName=memberSaveTrigger
+POST http://localhost:8080/quartz-trigger?triggerName=memberSaveTrigger
 Content-Type: application/json
 
 {

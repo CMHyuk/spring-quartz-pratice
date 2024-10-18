@@ -1,4 +1,4 @@
-package com.example.quartz.quartz;
+package com.example.quartz.schedulejob;
 
 public record UpdateCronExpressionRequest(String cronExpression) {
 }

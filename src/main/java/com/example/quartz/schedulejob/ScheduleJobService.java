@@ -16,4 +16,9 @@ public class ScheduleJobService {
         scheduleJob.updateCronExpression(cronExpression);
         return scheduleJob;
     }
+
+    public void save(ScheduleJob scheduleJob) {
+        scheduleJobRepository.save(scheduleJob);
+    }
+
 }

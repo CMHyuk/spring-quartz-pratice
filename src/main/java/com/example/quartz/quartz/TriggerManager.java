@@ -21,7 +21,7 @@ public class TriggerManager {
             Trigger newTrigger = TriggerBuilder.newTrigger()
                     .withIdentity(oldTrigger.getKey())
                     .withSchedule(CronScheduleBuilder.cronSchedule(cronExpression)
-                            .withMisfireHandlingInstructionDoNothing())
+                            .withMisfireHandlingInstructionIgnoreMisfires())
                     .forJob(oldTrigger.getJobKey())
                     .build();
 

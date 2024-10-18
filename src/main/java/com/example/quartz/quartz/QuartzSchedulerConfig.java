@@ -48,7 +48,8 @@ public class QuartzSchedulerConfig {
     private Trigger createTrigger(ScheduleJob scheduleJob) {
         return TriggerBuilder.newTrigger()
                 .withIdentity(scheduleJob.getTriggerName())
-                .withSchedule(CronScheduleBuilder.cronSchedule(scheduleJob.getCronExpression()))
+                .withSchedule(CronScheduleBuilder.cronSchedule(scheduleJob.getCronExpression())
+                        .withMisfireHandlingInstructionDoNothing())
                 .forJob(scheduleJob.getJobName())
                 .build();
     }

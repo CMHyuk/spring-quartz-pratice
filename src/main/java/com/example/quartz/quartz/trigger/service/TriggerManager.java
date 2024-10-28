@@ -1,4 +1,4 @@
-package com.example.quartz.quartz;
+package com.example.quartz.quartz.trigger.service;
 
 import lombok.RequiredArgsConstructor;
 import org.quartz.*;

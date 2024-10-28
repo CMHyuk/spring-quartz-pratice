@@ -7,6 +7,6 @@ spring:
     timeout: 86000
   data:
     redis:
-      host: 10.30.10.19
+      host: 10.10.32.91
       port: 6379
       password: 1234

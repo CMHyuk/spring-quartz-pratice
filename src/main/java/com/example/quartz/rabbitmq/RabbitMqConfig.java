@@ -1,6 +1,5 @@
 package com.example.quartz.rabbitmq;
 
-import com.example.quartz.Constants;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
@@ -11,6 +10,8 @@ import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.UUID;
 
 @Configuration
 @RequiredArgsConstructor
@@ -28,10 +29,10 @@ public class RabbitMqConfig {
     @Value("${spring.rabbitmq.password}")
     private String password;
 
-    private final String uniqueQueueName = Constants.RANDOM_QUEUE_NAME;
-
     @Value("${rabbitmq.exchange.name}")
     private String exchangeName;
+
+    private final String uniqueQueueName = UUID.randomUUID().toString();
 
     @Bean
     public Queue queue() {
@@ -42,7 +43,7 @@ public class RabbitMqConfig {
      * 지정된 Exchange 이름으로 Direct Exchange Bean을 생성
      */
     @Bean
-    public FanoutExchange directExchange() {
+    public FanoutExchange fanoutExchange() {
         return new FanoutExchange(exchangeName);
     }
 

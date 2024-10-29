@@ -1,6 +1,5 @@
 package com.example.quartz.quartz.trigger.service;
 
-import com.example.quartz.Constants;
 import com.example.quartz.quartz.trigger.dto.TriggerUpdateMessage;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;

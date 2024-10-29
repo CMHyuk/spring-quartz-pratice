@@ -26,9 +26,15 @@ public class TriggerController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/cron-expression/{triggerGroup}/{triggerName}")
-    public ResponseEntity<Void> updateCronExpression(@PathVariable String triggerGroup, @PathVariable String triggerName, @RequestBody CronExpressionUpdateRequest request) {
-        triggerService.updateCronExpression(triggerGroup, triggerName, request.cronExpression());
+    @PostMapping("/cron-expression/{triggerName}/{triggerGroup}")
+    public ResponseEntity<Void> updateCronExpression(@PathVariable String triggerName, @PathVariable String triggerGroup, @RequestBody CronExpressionUpdateRequest request) {
+        triggerService.updateCronExpression(triggerName, triggerGroup, request.cronExpression());
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/job-trigger/{jobName}/{jobGroup}")
+    public ResponseEntity<Void> resumeTrigger(@PathVariable String jobName, @PathVariable String jobGroup) {
+        triggerService.triggerJob(jobName, jobGroup);
         return ResponseEntity.ok().build();
     }
 

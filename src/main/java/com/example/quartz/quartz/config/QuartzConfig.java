@@ -69,11 +69,12 @@ public class QuartzConfig {
         JobCronTrigger jobCronTrigger = jobCronTriggerRepository.findByTriggerGroupAndTriggerName(jobTrigger.getTriggerGroup(), jobTrigger.getTriggerName())
                 .orElseThrow(EntityNotFoundException::new);
 
-        TriggerBuilder<CronTrigger> cronTrigger = TriggerBuilder.newTrigger()
+        return TriggerBuilder.newTrigger()
                 .withIdentity(jobTrigger.getTriggerName(), jobTrigger.getTriggerGroup())
-                .withSchedule(CronScheduleBuilder.cronSchedule(jobCronTrigger.getCronExpression()));
-
-        return cronTrigger.build();
+                .withSchedule(CronScheduleBuilder.cronSchedule(jobCronTrigger.getCronExpression())
+                        .withMisfireHandlingInstructionFireAndProceed()) // 미스파이어 시 즉시 트리거를 실행하고, 이후 스케줄을 계속 진행
+                .forJob(jobTrigger.getJobName())
+                .build();
     }
 
 }

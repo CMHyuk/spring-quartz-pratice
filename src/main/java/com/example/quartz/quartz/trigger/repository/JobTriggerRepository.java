@@ -8,7 +8,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
@@ -27,12 +26,6 @@ public class JobTriggerRepository {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery()
                 .filter(QueryBuilders.termQuery(JOB_NAME_KEYWORD, jobName));
         return jobTriggerBaseRepository.findAll(TENANT_ID, boolQueryBuilder, Sort.unsorted());
-    }
-
-    public Optional<JobTrigger> findByJobName(String jobName) {
-        BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery()
-                .filter(QueryBuilders.termQuery(JOB_NAME_KEYWORD, jobName));
-        return Optional.ofNullable(jobTriggerBaseRepository.find(TENANT_ID, boolQueryBuilder));
     }
 
 }

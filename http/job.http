@@ -17,7 +17,7 @@ Content-Type: application/json
 {
   "jobName" : "memberSaveJob",
   "triggerName" : "MemberSaveTrigger",
-  "triggerGroup" : "SaveTriggerGroup",
+  "triggerGroup" : "DEFAULT",
   "triggerType": "cron"
 }
 
@@ -27,14 +27,17 @@ Content-Type: application/json
 
 {
   "triggerName" : "MemberSaveTrigger",
-  "triggerGroup" : "SaveTriggerGroup",
+  "triggerGroup" : "DEFAULT",
   "cronExpression" : "*/15 * * * * ?"
 }
 
 ### CronExpression 업데이트
-POST http://localhost:8080/cron-expression/SaveTriggerGroup/MemberSaveTrigger
+POST http://localhost:8080/cron-expression/MemberSaveTrigger/DEFAULT
 Content-Type: application/json
 
 {
   "cronExpression": "*/15 * * * * ?"
 }
+
+### 스케줄러 즉시 실행
+POST http://localhost:8080/job-trigger/memberSaveJob/DEFAULT

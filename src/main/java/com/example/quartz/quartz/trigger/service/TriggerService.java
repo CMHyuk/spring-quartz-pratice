@@ -28,14 +28,18 @@ public class TriggerService {
         jobCronTriggerRepository.save(jobCronTrigger);
     }
 
-    public void updateCronExpression(String triggerGroup, String triggerName, String cronExpression) {
+    public void updateCronExpression(String triggerName, String triggerGroup, String cronExpression) {
         JobCronTrigger jobCronTrigger = jobCronTriggerRepository.findByTriggerGroupAndTriggerName(triggerGroup, triggerName)
                 .orElseThrow(EntityNotFoundException::new);
 
         jobCronTrigger.updateCronExpression(cronExpression);
 
         jobCronTriggerRepository.save(jobCronTrigger);
-        triggerManager.updateTrigger(triggerGroup, triggerName, cronExpression);
+        triggerManager.updateTrigger(triggerName, triggerGroup, cronExpression);
+    }
+
+    public void triggerJob(String jobName, String jobGroup) {
+        triggerManager.triggerJob(jobName, jobGroup);
     }
 
 }

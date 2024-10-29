@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class TriggerService {
 
+    private final TriggerManager triggerManager;
     private final JobTriggerRepository jobTriggerRepository;
     private final JobCronTriggerRepository jobCronTriggerRepository;
 
@@ -27,13 +28,14 @@ public class TriggerService {
         jobCronTriggerRepository.save(jobCronTrigger);
     }
 
-    public void updateCronExpression(String triggerName, String cronExpression) {
-        JobCronTrigger jobCronTrigger = jobCronTriggerRepository.findByTriggerName(triggerName)
+    public void updateCronExpression(String triggerGroup, String triggerName, String cronExpression) {
+        JobCronTrigger jobCronTrigger = jobCronTriggerRepository.findByTriggerGroupAndTriggerName(triggerGroup, triggerName)
                 .orElseThrow(EntityNotFoundException::new);
 
         jobCronTrigger.updateCronExpression(cronExpression);
 
         jobCronTriggerRepository.save(jobCronTrigger);
+        triggerManager.updateTrigger(triggerGroup, triggerName, cronExpression);
     }
 
 }

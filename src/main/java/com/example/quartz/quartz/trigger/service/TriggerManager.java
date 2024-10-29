@@ -10,9 +10,9 @@ public class TriggerManager {
 
     private final Scheduler scheduler;
 
-    public void updateTrigger(String triggerName, String cronExpression) {
+    public void updateTrigger(String triggerGroup, String triggerName, String cronExpression) {
         try {
-            TriggerKey triggerKey = TriggerKey.triggerKey(triggerName, "DEFAULT");
+            TriggerKey triggerKey = TriggerKey.triggerKey(triggerName, triggerGroup);
             Trigger oldTrigger = scheduler.getTrigger(triggerKey);
             if (oldTrigger == null) {
                 throw new SchedulerException("트리거를 찾을 수 없습니다: " + triggerName);

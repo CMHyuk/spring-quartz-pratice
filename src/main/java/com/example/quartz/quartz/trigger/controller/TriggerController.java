@@ -6,10 +6,7 @@ import com.example.quartz.quartz.trigger.dto.JobTriggerSaveRequest;
 import com.example.quartz.quartz.trigger.service.TriggerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
@@ -29,9 +26,9 @@ public class TriggerController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/cron-expression")
-    public ResponseEntity<Void> updateCronExpression(@RequestParam String triggerName, @RequestBody CronExpressionUpdateRequest request) {
-        triggerService.updateCronExpression(triggerName, request.cronExpression());
+    @PostMapping("/cron-expression/{triggerGroup}/{triggerName}")
+    public ResponseEntity<Void> updateCronExpression(@PathVariable String triggerGroup, @PathVariable String triggerName, @RequestBody CronExpressionUpdateRequest request) {
+        triggerService.updateCronExpression(triggerGroup, triggerName, request.cronExpression());
         return ResponseEntity.ok().build();
     }
 

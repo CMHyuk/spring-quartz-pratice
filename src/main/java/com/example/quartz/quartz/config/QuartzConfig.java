@@ -66,7 +66,7 @@ public class QuartzConfig {
     }
 
     private Trigger createTrigger(JobTrigger jobTrigger) {
-        JobCronTrigger jobCronTrigger = jobCronTriggerRepository.findByTriggerName(jobTrigger.getTriggerName())
+        JobCronTrigger jobCronTrigger = jobCronTriggerRepository.findByTriggerGroupAndTriggerName(jobTrigger.getTriggerGroup(), jobTrigger.getTriggerName())
                 .orElseThrow(EntityNotFoundException::new);
 
         TriggerBuilder<CronTrigger> cronTrigger = TriggerBuilder.newTrigger()

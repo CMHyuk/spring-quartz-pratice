@@ -27,13 +27,14 @@ Content-Type: application/json
 
 {
   "triggerName" : "MemberSaveTrigger",
+  "triggerGroup" : "SaveTriggerGroup",
   "cronExpression" : "*/15 * * * * ?"
 }
 
 ### CronExpression 업데이트
-POST http://localhost:8080/cron-expression?triggerName=MemberSaveTrigger
+POST http://localhost:8080/cron-expression/SaveTriggerGroup/MemberSaveTrigger
 Content-Type: application/json
 
 {
-  "cronExpression": "*/5 * * * * ?"
+  "cronExpression": "*/15 * * * * ?"
 }

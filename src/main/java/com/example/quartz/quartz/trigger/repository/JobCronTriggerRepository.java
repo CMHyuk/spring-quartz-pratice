@@ -18,8 +18,8 @@ public class JobCronTriggerRepository {
 
     private final CronTriggerBaseRepository cronTriggerBaseRepository;
 
-    public void save(JobCronTrigger jobCronTrigger) {
-        cronTriggerBaseRepository.save(TENANT_ID, jobCronTrigger);
+    public JobCronTrigger save(JobCronTrigger jobCronTrigger) {
+        return cronTriggerBaseRepository.save(TENANT_ID, jobCronTrigger);
     }
 
     public Optional<JobCronTrigger> findByTriggerGroupAndTriggerName(String triggerGroup, String triggerName) {

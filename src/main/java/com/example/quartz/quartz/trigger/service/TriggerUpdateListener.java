@@ -1,6 +1,7 @@
 package com.example.quartz.quartz.trigger.service;
 
 import com.example.quartz.quartz.trigger.dto.TriggerUpdateMessage;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -8,16 +9,13 @@ import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class TriggerUpdateListener {
 
     private final Scheduler scheduler;
 
-    public TriggerUpdateListener(Scheduler scheduler) {
-        this.scheduler = scheduler;
-    }
-
     @RabbitListener(queues = "#{@uniqueQueueName}")
-    public void receiveTriggerUpdate(TriggerUpdateMessage updateMessage) {
+    public void receiveTriggerUpdateMessage(TriggerUpdateMessage updateMessage) {
         try {
             TriggerKey triggerKey = TriggerKey.triggerKey(updateMessage.triggerName(), updateMessage.triggerGroup());
             Trigger oldTrigger = scheduler.getTrigger(triggerKey);

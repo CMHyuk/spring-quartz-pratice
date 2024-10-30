@@ -1,7 +1,7 @@
 package com.example.quartz.quartz.trigger.service;
 
-import com.example.quartz.quartz.job.model.JobDetail;
-import com.example.quartz.quartz.job.repository.JobDetailRepository;
+import com.example.quartz.quartz.job.model.ScheduleJob;
+import com.example.quartz.quartz.job.repository.ScheduleJobRepository;
 import com.example.quartz.quartz.trigger.dto.TriggerUpdateMessage;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +21,7 @@ public class TriggerManager {
 
     private final Scheduler scheduler;
     private final RabbitTemplate rabbitTemplate;
-    private final JobDetailRepository jobDetailRepository;
+    private final ScheduleJobRepository scheduleJobRepository;
 
     public void updateTrigger(String triggerName, String triggerGroup, String cronExpression) {
         try {
@@ -59,10 +59,10 @@ public class TriggerManager {
 
     public void triggerJob(String jobName, String jobGroup) {
         try {
-            JobDetail jobDetail = jobDetailRepository.findByJobNameAndJobGroup(jobName, jobGroup)
+            ScheduleJob scheduleJob = scheduleJobRepository.findByJobNameAndJobGroup(jobName, jobGroup)
                     .orElseThrow(EntityNotFoundException::new);
 
-            scheduler.triggerJob(JobKey.jobKey(jobDetail.getJobName(), jobGroup));
+            scheduler.triggerJob(JobKey.jobKey(scheduleJob.getJobName(), jobGroup));
         } catch (SchedulerException e) {
             throw new RuntimeException(e.getMessage());
         }

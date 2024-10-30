@@ -1,34 +1,26 @@
-### Job Detail 저장
-POST http://localhost:8080/job-detail
+### 스케줄 저장
+POST http://localhost:8080/job/register
 Content-Type: application/json
 
 {
-  "jobName": "memberSaveJob",
-  "jobGroup": "DEFAULT",
-  "jobClassName": "com.example.quartz.member.MemberSaveJobExecutor",
-  "isDurable": false,
-  "requestRecovery": true
-}
-
-### Job Trigger 저장
-POST http://localhost:8080/job-trigger
-Content-Type: application/json
-
-{
-  "jobName" : "memberSaveJob",
-  "triggerName" : "MemberSaveTrigger",
-  "triggerGroup" : "DEFAULT",
-  "triggerType": "cron"
-}
-
-### Job Cron Trigger 저장
-POST http://localhost:8080/cron-trigger
-Content-Type: application/json
-
-{
-  "triggerName" : "MemberSaveTrigger",
-  "triggerGroup" : "DEFAULT",
-  "cronExpression" : "*/15 * * * * ?"
+  "scheduleJobSaveRequest": {
+    "jobName": "memberSaveJob",
+    "jobGroup": "DEFAULT",
+    "jobClassName": "com.example.quartz.member.MemberSaveJobExecutor",
+    "isDurable": false,
+    "requestRecovery": true
+  },
+  "jobTriggerSaveRequest": {
+    "jobName": "memberSaveJob",
+    "triggerName": "MemberSaveTrigger",
+    "triggerGroup": "DEFAULT",
+    "triggerType": "cron"
+  },
+  "cronTriggerSaveRequest": {
+    "triggerName": "MemberSaveTrigger",
+    "triggerGroup": "DEFAULT",
+    "cronExpression": "*/30 * * * * ?"
+  }
 }
 
 ### CronExpression 업데이트
@@ -36,7 +28,7 @@ POST http://localhost:8080/cron-expression/MemberSaveTrigger/DEFAULT
 Content-Type: application/json
 
 {
-  "cronExpression": "*/15 * * * * ?"
+  "cronExpression": "*/10 * * * * ?"
 }
 
 ### 스케줄러 즉시 실행

@@ -18,8 +18,8 @@ public class JobTriggerRepository {
 
     private final JobTriggerBaseRepository jobTriggerBaseRepository;
 
-    public void save(JobTrigger jobTrigger) {
-        jobTriggerBaseRepository.save(TENANT_ID, jobTrigger);
+    public JobTrigger save(JobTrigger jobTrigger) {
+        return jobTriggerBaseRepository.save(TENANT_ID, jobTrigger);
     }
 
     public List<JobTrigger> findAllByJobName(String jobName) {

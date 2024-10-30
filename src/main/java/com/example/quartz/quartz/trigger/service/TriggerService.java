@@ -18,14 +18,14 @@ public class TriggerService {
     private final JobTriggerRepository jobTriggerRepository;
     private final JobCronTriggerRepository jobCronTriggerRepository;
 
-    public void saveJobTrigger(JobTriggerSaveRequest request) {
+    public JobTrigger saveJobTrigger(JobTriggerSaveRequest request) {
         JobTrigger jobTrigger = request.toTriggerSchedule();
-        jobTriggerRepository.save(jobTrigger);
+        return jobTriggerRepository.save(jobTrigger);
     }
 
-    public void saveCronTrigger(CronTriggerSaveRequest request) {
+    public JobCronTrigger saveCronTrigger(CronTriggerSaveRequest request) {
         JobCronTrigger jobCronTrigger = request.toCronTrigger();
-        jobCronTriggerRepository.save(jobCronTrigger);
+        return jobCronTriggerRepository.save(jobCronTrigger);
     }
 
     public void updateCronExpression(String triggerName, String triggerGroup, String cronExpression) {

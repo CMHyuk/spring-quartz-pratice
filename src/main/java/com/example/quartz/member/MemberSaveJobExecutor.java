@@ -17,7 +17,6 @@ public class MemberSaveJobExecutor implements Job {
     @Override
     @DistributedLock(key = "memberJobLock")
     public void execute(JobExecutionContext jobExecutionContext) {
-
         log.info("Member save job started.");
         memberRepository.save();
         log.info("Member save job finished.");

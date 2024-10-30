@@ -1,42 +1,41 @@
-package com.example.quartz.quartz.config;
+package com.example.quartz.quartz.scheduler.service;
 
 import com.example.quartz.quartz.job.model.ScheduleJob;
-import com.example.quartz.quartz.job.repository.ScheduleJobRepository;
+import com.example.quartz.quartz.scheduler.dto.JobSaveMessage;
 import com.example.quartz.quartz.trigger.model.JobCronTrigger;
 import com.example.quartz.quartz.trigger.model.JobTrigger;
-import com.example.quartz.quartz.trigger.repository.JobCronTriggerRepository;
-import com.example.quartz.quartz.trigger.repository.JobTriggerRepository;
-import jakarta.annotation.PostConstruct;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
-import org.springframework.context.annotation.Configuration;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-@Configuration
+@Slf4j
+@Service
 @RequiredArgsConstructor
-public class QuartzConfig {
+public class JobSaveListener {
 
     private final Scheduler scheduler;
-    private final ScheduleJobRepository scheduleJobRepository;
-    private final JobTriggerRepository jobTriggerRepository;
-    private final JobCronTriggerRepository jobCronTriggerRepository;
 
-    @PostConstruct
-    public void initializeJobSchedules() throws SchedulerException {
-        List<ScheduleJob> jobDetails = scheduleJobRepository.findAll();
+    @RabbitListener(queues = "#{@uniqueQueueName}")
+    public void receiveJobSaveMessage(JobSaveMessage jobSaveMessage) throws SchedulerException {
+        ScheduleJob scheduleJob = jobSaveMessage.scheduleJob();
+        JobTrigger jobTrigger = jobSaveMessage.jobTrigger();
+        JobCronTrigger jobCronTrigger = jobSaveMessage.jobCronTrigger();
 
-        Map<JobDetail, Set<? extends Trigger>> scheduleJobs = jobDetails.stream()
+        Map<JobDetail, Set<? extends Trigger>> scheduleJobs = Stream.of(scheduleJob)
                 .collect(Collectors.toMap(
                         this::createJobDetail,
-                        this::createTriggersForJob
+                        job -> createTriggersForJob(jobTrigger, jobCronTrigger)
                 ));
 
         scheduler.scheduleJobs(scheduleJobs, true);
+        log.info("메시지를 수신 받아 새로운 Job 저장");
     }
 
     private JobDetail createJobDetail(ScheduleJob scheduleJob) {
@@ -49,11 +48,8 @@ public class QuartzConfig {
                 .build();
     }
 
-    private Set<Trigger> createTriggersForJob(ScheduleJob scheduleJob) {
-        List<JobTrigger> jobTriggers = jobTriggerRepository.findAllByJobName(scheduleJob.getJobName());
-
-        return jobTriggers.stream()
-                .map(this::createTrigger)
+    private Set<Trigger> createTriggersForJob(JobTrigger jobTrigger, JobCronTrigger jobCronTrigger) {
+        return Stream.of(createTrigger(jobTrigger, jobCronTrigger))
                 .collect(Collectors.toSet());
     }
 
@@ -65,10 +61,7 @@ public class QuartzConfig {
         }
     }
 
-    private Trigger createTrigger(JobTrigger jobTrigger) {
-        JobCronTrigger jobCronTrigger = jobCronTriggerRepository.findByTriggerGroupAndTriggerName(jobTrigger.getTriggerGroup(), jobTrigger.getTriggerName())
-                .orElseThrow(EntityNotFoundException::new);
-
+    private Trigger createTrigger(JobTrigger jobTrigger, JobCronTrigger jobCronTrigger) {
         return TriggerBuilder.newTrigger()
                 .withIdentity(jobTrigger.getTriggerName(), jobTrigger.getTriggerGroup())
                 .withSchedule(CronScheduleBuilder.cronSchedule(jobCronTrigger.getCronExpression())

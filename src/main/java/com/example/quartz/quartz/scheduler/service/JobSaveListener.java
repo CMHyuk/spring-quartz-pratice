@@ -12,8 +12,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -23,24 +21,30 @@ public class JobSaveListener {
     private final Scheduler scheduler;
 
     @RabbitListener(queues = "#{@uniqueQueueName}")
-    public void receiveJobSaveMessage(JobSaveMessage jobSaveMessage) throws SchedulerException {
+    public void receiveJobSaveMessage(JobSaveMessage jobSaveMessage) {
+        try {
+            scheduleNewJob(jobSaveMessage);
+            log.info("메시지를 수신 받아 새로운 Job 저장");
+        } catch (SchedulerException e) {
+            throw new RuntimeException("Job 저장에 실패했습니다: " + e.getMessage(), e);
+        }
+    }
+
+    private void scheduleNewJob(JobSaveMessage jobSaveMessage) throws SchedulerException {
         ScheduleJob scheduleJob = jobSaveMessage.scheduleJob();
         JobTrigger jobTrigger = jobSaveMessage.jobTrigger();
         JobCronTrigger jobCronTrigger = jobSaveMessage.jobCronTrigger();
 
-        Map<JobDetail, Set<? extends Trigger>> scheduleJobs = Stream.of(scheduleJob)
-                .collect(Collectors.toMap(
-                        this::createJobDetail,
-                        job -> createTriggersForJob(jobTrigger, jobCronTrigger)
-                ));
+        Map<JobDetail, Set<? extends Trigger>> scheduleJobs = Map.of(
+                createJobDetail(scheduleJob),
+                createTriggersForJob(jobTrigger, jobCronTrigger)
+        );
 
         scheduler.scheduleJobs(scheduleJobs, true);
-        log.info("메시지를 수신 받아 새로운 Job 저장");
     }
 
     private JobDetail createJobDetail(ScheduleJob scheduleJob) {
         Class<? extends Job> jobClass = getJobClass(scheduleJob.getJobClassName());
-
         return JobBuilder.newJob(jobClass)
                 .withIdentity(scheduleJob.getJobName(), scheduleJob.getJobGroup())
                 .storeDurably(scheduleJob.isDurable())
@@ -49,8 +53,16 @@ public class JobSaveListener {
     }
 
     private Set<Trigger> createTriggersForJob(JobTrigger jobTrigger, JobCronTrigger jobCronTrigger) {
-        return Stream.of(createTrigger(jobTrigger, jobCronTrigger))
-                .collect(Collectors.toSet());
+        return Set.of(createTrigger(jobTrigger, jobCronTrigger));
+    }
+
+    private Trigger createTrigger(JobTrigger jobTrigger, JobCronTrigger jobCronTrigger) {
+        return TriggerBuilder.newTrigger()
+                .withIdentity(jobTrigger.getTriggerName(), jobTrigger.getTriggerGroup())
+                .withSchedule(CronScheduleBuilder.cronSchedule(jobCronTrigger.getCronExpression())
+                        .withMisfireHandlingInstructionFireAndProceed())
+                .forJob(jobTrigger.getJobName())
+                .build();
     }
 
     private Class<? extends Job> getJobClass(String jobClassName) {
@@ -59,15 +71,6 @@ public class JobSaveListener {
         } catch (ClassNotFoundException e) {
             throw new RuntimeException("Job class not found: " + jobClassName, e);
         }
-    }
-
-    private Trigger createTrigger(JobTrigger jobTrigger, JobCronTrigger jobCronTrigger) {
-        return TriggerBuilder.newTrigger()
-                .withIdentity(jobTrigger.getTriggerName(), jobTrigger.getTriggerGroup())
-                .withSchedule(CronScheduleBuilder.cronSchedule(jobCronTrigger.getCronExpression())
-                        .withMisfireHandlingInstructionFireAndProceed()) // 미스파이어 시 즉시 트리거를 실행하고, 이후 스케줄을 계속 진행
-                .forJob(jobTrigger.getJobName())
-                .build();
     }
 
 }

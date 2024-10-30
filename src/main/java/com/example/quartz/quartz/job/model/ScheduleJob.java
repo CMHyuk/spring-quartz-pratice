@@ -10,7 +10,7 @@ import org.springframework.data.elasticsearch.annotations.Setting;
 
 @Entity
 @Getter
-@Document(indexName = "job_schedule_" + "*", createIndex = false)
+@Document(indexName = "schedule_job_" + "*", createIndex = false)
 @Setting(settingPath = "lower_case_normalizer_setting.json")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ScheduleJob {

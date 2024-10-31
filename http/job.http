@@ -1,5 +1,5 @@
 ### 스케줄 저장
-POST http://localhost:8080/job/register
+POST http://localhost:8080/cron-job/register
 Content-Type: application/json
 
 {
@@ -19,7 +19,18 @@ Content-Type: application/json
   "cronTriggerSaveRequest": {
     "triggerName": "MemberSaveTrigger",
     "triggerGroup": "DEFAULT",
-    "cronExpression": "*/30 * * * * ?"
+    "timeZone" : "Asia/Seoul",
+    "misFirePolicy" : "FIRE_AND_PROCEED",
+    "cronExpressionRequest": {
+      "frequency": "WEEKLY",
+      "time": {
+        "hour": 14,
+        "minute": 0
+      },
+      "daysOfWeek": ["MON", "WED", "FRI"],
+      "daysOfMonth": ["1", "15"],
+      "specificDate": "2024-12-25"
+    }
   }
 }
 
@@ -28,7 +39,11 @@ POST http://localhost:8080/cron-expression/MemberSaveTrigger/DEFAULT
 Content-Type: application/json
 
 {
-  "cronExpression": "*/10 * * * * ?"
+  "frequency": "LAST_WEEKDAY",
+  "time": {
+    "hour": 16,
+    "minute": 47
+  }
 }
 
 ### 스케줄러 즉시 실행

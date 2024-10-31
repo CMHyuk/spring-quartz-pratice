@@ -14,7 +14,7 @@ public class TriggerController {
 
     @PostMapping("/cron-expression/{triggerName}/{triggerGroup}")
     public ResponseEntity<Void> updateCronExpression(@PathVariable String triggerName, @PathVariable String triggerGroup, @RequestBody CronExpressionUpdateRequest request) {
-        triggerService.updateCronExpression(triggerName, triggerGroup, request.cronExpression());
+        triggerService.updateCronExpression(triggerName, triggerGroup, request);
         return ResponseEntity.ok().build();
     }
 

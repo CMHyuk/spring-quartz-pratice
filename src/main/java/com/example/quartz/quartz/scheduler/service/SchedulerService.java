@@ -3,8 +3,10 @@ package com.example.quartz.quartz.scheduler.service;
 import com.example.quartz.quartz.job.model.ScheduleJob;
 import com.example.quartz.quartz.job.service.ScheduleJobService;
 import com.example.quartz.quartz.scheduler.dto.JobSaveMessage;
-import com.example.quartz.quartz.scheduler.dto.JobSaveRequest;
+import com.example.quartz.quartz.scheduler.dto.CronJobSaveRequest;
+import com.example.quartz.quartz.scheduler.dto.SimpleJobSaveRequest;
 import com.example.quartz.quartz.trigger.model.JobCronTrigger;
+import com.example.quartz.quartz.trigger.model.JobSimpleTrigger;
 import com.example.quartz.quartz.trigger.model.JobTrigger;
 import com.example.quartz.quartz.trigger.service.TriggerService;
 import lombok.RequiredArgsConstructor;
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 
 @Slf4j
 @Service
@@ -30,16 +33,25 @@ public class SchedulerService {
     private final TriggerService triggerService;
     private final ScheduleJobService scheduleJobService;
 
-    public void registerJob(JobSaveRequest request) {
+    public void registerCronJob(CronJobSaveRequest request) {
         ScheduleJob scheduleJob = scheduleJobService.saveJobDetail(request.scheduleJobSaveRequest());
         JobTrigger jobTrigger = triggerService.saveJobTrigger(request.jobTriggerSaveRequest());
         JobCronTrigger jobCronTrigger = triggerService.saveCronTrigger(request.cronTriggerSaveRequest());
 
-        scheduleAndPublishJob(scheduleJob, jobTrigger, jobCronTrigger);
+        scheduleAndPublishCronJob(scheduleJob, jobTrigger, jobCronTrigger);
         log.info("새로운 Job을 저장하고 큐에 메시지 전송");
     }
 
-    private void scheduleAndPublishJob(ScheduleJob scheduleJob, JobTrigger jobTrigger, JobCronTrigger jobCronTrigger) {
+    public void registerSimpleJob(SimpleJobSaveRequest request) {
+        ScheduleJob scheduleJob = scheduleJobService.saveJobDetail(request.scheduleJobSaveRequest());
+        JobTrigger jobTrigger = triggerService.saveJobTrigger(request.jobTriggerSaveRequest());
+        JobSimpleTrigger jobSimpleTrigger = triggerService.saveSimpleTrigger(request.simpleTriggerSaveRequest());
+
+        //scheduleAndPublishCronJob(scheduleJob, jobTrigger, jobSimpleTrigger);
+        log.info("새로운 Job을 저장하고 큐에 메시지 전송");
+    }
+
+    private void scheduleAndPublishCronJob(ScheduleJob scheduleJob, JobTrigger jobTrigger, JobCronTrigger jobCronTrigger) {
         try {
             scheduler.scheduleJobs(createScheduleJobs(scheduleJob, jobTrigger, jobCronTrigger), true);
             publishJobSaveMessage(scheduleJob, jobTrigger, jobCronTrigger);
@@ -69,10 +81,12 @@ public class SchedulerService {
     }
 
     private Trigger createTrigger(JobTrigger jobTrigger, JobCronTrigger jobCronTrigger) {
+        CronScheduleBuilder cronScheduleBuilder = CronScheduleBuilder.cronSchedule(jobCronTrigger.getCronExpression())
+                .inTimeZone(TimeZone.getTimeZone(jobCronTrigger.getTimeZone()));
+
         return TriggerBuilder.newTrigger()
                 .withIdentity(jobTrigger.getTriggerName(), jobTrigger.getTriggerGroup())
-                .withSchedule(CronScheduleBuilder.cronSchedule(jobCronTrigger.getCronExpression())
-                        .withMisfireHandlingInstructionFireAndProceed())
+                .withSchedule(jobCronTrigger.getMisFirePolicy().applyMisfirePolicy(cronScheduleBuilder))
                 .forJob(jobTrigger.getJobName())
                 .build();
     }

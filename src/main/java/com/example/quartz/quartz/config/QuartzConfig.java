@@ -2,12 +2,10 @@ package com.example.quartz.quartz.config;
 
 import com.example.quartz.quartz.job.model.ScheduleJob;
 import com.example.quartz.quartz.job.repository.ScheduleJobRepository;
-import com.example.quartz.quartz.trigger.model.JobCronTrigger;
 import com.example.quartz.quartz.trigger.model.JobTrigger;
-import com.example.quartz.quartz.trigger.repository.JobCronTriggerRepository;
 import com.example.quartz.quartz.trigger.repository.JobTriggerRepository;
+import com.example.quartz.quartz.trigger.service.TriggerFactory;
 import jakarta.annotation.PostConstruct;
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.quartz.*;
 import org.springframework.context.annotation.Configuration;
@@ -24,7 +22,7 @@ public class QuartzConfig {
     private final Scheduler scheduler;
     private final ScheduleJobRepository scheduleJobRepository;
     private final JobTriggerRepository jobTriggerRepository;
-    private final JobCronTriggerRepository jobCronTriggerRepository;
+    private final TriggerFactory triggerFactory;
 
     @PostConstruct
     public void initializeJobSchedules() throws SchedulerException {
@@ -66,15 +64,7 @@ public class QuartzConfig {
     }
 
     private Trigger createTrigger(JobTrigger jobTrigger) {
-        JobCronTrigger jobCronTrigger = jobCronTriggerRepository.findByTriggerGroupAndTriggerName(jobTrigger.getTriggerGroup(), jobTrigger.getTriggerName())
-                .orElseThrow(EntityNotFoundException::new);
-
-        return TriggerBuilder.newTrigger()
-                .withIdentity(jobTrigger.getTriggerName(), jobTrigger.getTriggerGroup())
-                .withSchedule(CronScheduleBuilder.cronSchedule(jobCronTrigger.getCronExpression())
-                        .withMisfireHandlingInstructionFireAndProceed()) // 미스파이어 시 즉시 트리거를 실행하고, 이후 스케줄을 계속 진행
-                .forJob(jobTrigger.getJobName())
-                .build();
+        return triggerFactory.createTrigger(jobTrigger);
     }
 
 }

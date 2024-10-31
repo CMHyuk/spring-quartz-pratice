@@ -1,24 +1,22 @@
 package com.example.quartz.quartz.trigger.model;
 
+import com.example.quartz.global.BaseEntity;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.Id;
-import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.elasticsearch.annotations.Document;
 import org.springframework.data.elasticsearch.annotations.Setting;
 
+import static lombok.AccessLevel.*;
+
 @Entity
 @Getter
 @Document(indexName = "job_trigger_" + "*", createIndex = false)
 @Setting(settingPath = "lower_case_normalizer_setting.json")
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class JobTrigger {
-
-    @Id
-    private String id;
+@NoArgsConstructor(access = PROTECTED)
+public class JobTrigger extends BaseEntity {
 
     private String jobName;
     private String triggerName;

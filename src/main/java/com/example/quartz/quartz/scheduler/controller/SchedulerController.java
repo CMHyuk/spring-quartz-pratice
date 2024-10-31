@@ -1,6 +1,7 @@
 package com.example.quartz.quartz.scheduler.controller;
 
-import com.example.quartz.quartz.scheduler.dto.JobSaveRequest;
+import com.example.quartz.quartz.scheduler.dto.CronJobSaveRequest;
+import com.example.quartz.quartz.scheduler.dto.SimpleJobSaveRequest;
 import com.example.quartz.quartz.scheduler.service.SchedulerService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -14,9 +15,14 @@ public class SchedulerController {
 
     private final SchedulerService schedulerService;
 
-    @PostMapping("/job/register")
-    public ResponseEntity<Void> registerJob(@RequestBody JobSaveRequest request) {
-        schedulerService.registerJob(request);
+    @PostMapping("/cron-job/register")
+    public ResponseEntity<Void> registerCronJob(@RequestBody CronJobSaveRequest request) {
+        schedulerService.registerCronJob(request);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/simple-job/register")
+    public ResponseEntity<Void> registerSimpleJob(@RequestBody SimpleJobSaveRequest request) {
         return ResponseEntity.ok().build();
     }
 

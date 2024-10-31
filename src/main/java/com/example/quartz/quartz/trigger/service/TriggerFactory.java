@@ -5,9 +5,9 @@ import com.example.quartz.quartz.trigger.model.JobSimpleTrigger;
 import com.example.quartz.quartz.trigger.model.JobTrigger;
 import com.example.quartz.quartz.trigger.repository.JobCronTriggerRepository;
 import com.example.quartz.quartz.trigger.repository.JobSimpleTriggerRepository;
+import com.example.quartz.quartz.trigger.util.TriggerGenerator;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.quartz.CronScheduleBuilder;
 import org.quartz.SimpleScheduleBuilder;
 import org.quartz.Trigger;
 import org.quartz.TriggerBuilder;
@@ -31,16 +31,14 @@ public class TriggerFactory {
         String triggerName = jobTrigger.getTriggerName();
         String triggerGroup = jobTrigger.getTriggerGroup();
 
-        JobCronTrigger jobCronTrigger = jobCronTriggerRepository.findByTriggerNameAndTriggerGroup(triggerName, triggerGroup)
-                .orElseThrow(EntityNotFoundException::new);
+        JobCronTrigger jobCronTrigger = findJobCronTrigger(triggerName, triggerGroup);
 
-        return TriggerBuilder.newTrigger()
-                .withIdentity(triggerName, triggerGroup)
-                .withSchedule(CronScheduleBuilder.cronSchedule(jobCronTrigger.getCronExpression())
-                        //.inTimeZone(TimeZone.getTimeZone(jobCronTrigger.getTimeZone()))
-                        .withMisfireHandlingInstructionFireAndProceed())
-                .forJob(jobTrigger.getJobName())
-                .build();
+        return TriggerGenerator.createCronTrigger(jobCronTrigger, jobTrigger.getJobName());
+    }
+
+    private JobCronTrigger findJobCronTrigger(String triggerName, String triggerGroup) {
+        return jobCronTriggerRepository.findByTriggerNameAndTriggerGroup(triggerName, triggerGroup)
+                .orElseThrow(EntityNotFoundException::new);
     }
 
     private Trigger createSimpleTrigger(JobTrigger jobTrigger) {

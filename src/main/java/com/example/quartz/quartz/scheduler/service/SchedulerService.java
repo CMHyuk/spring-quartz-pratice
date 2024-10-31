@@ -9,6 +9,7 @@ import com.example.quartz.quartz.trigger.model.JobCronTrigger;
 import com.example.quartz.quartz.trigger.model.JobSimpleTrigger;
 import com.example.quartz.quartz.trigger.model.JobTrigger;
 import com.example.quartz.quartz.trigger.service.TriggerService;
+import com.example.quartz.quartz.trigger.util.TriggerGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
@@ -18,7 +19,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.Map;
 import java.util.Set;
-import java.util.TimeZone;
 
 @Slf4j
 @Service
@@ -76,19 +76,8 @@ public class SchedulerService {
     }
 
     private Set<Trigger> createTriggersForJob(JobTrigger jobTrigger, JobCronTrigger jobCronTrigger) {
-        Trigger trigger = createTrigger(jobTrigger, jobCronTrigger);
+        Trigger trigger = TriggerGenerator.createCronTrigger(jobCronTrigger, jobTrigger.getJobName());
         return Set.of(trigger);
-    }
-
-    private Trigger createTrigger(JobTrigger jobTrigger, JobCronTrigger jobCronTrigger) {
-        CronScheduleBuilder cronScheduleBuilder = CronScheduleBuilder.cronSchedule(jobCronTrigger.getCronExpression())
-                .inTimeZone(TimeZone.getTimeZone(jobCronTrigger.getTimeZone()));
-
-        return TriggerBuilder.newTrigger()
-                .withIdentity(jobTrigger.getTriggerName(), jobTrigger.getTriggerGroup())
-                .withSchedule(jobCronTrigger.getMisFirePolicy().applyMisfirePolicy(cronScheduleBuilder))
-                .forJob(jobTrigger.getJobName())
-                .build();
     }
 
     private Class<? extends Job> getJobClass(String jobClassName) {

@@ -49,7 +49,7 @@ public class TriggerService {
         String cronExpression = generateCronExpression(request);
 
         updateAndSaveTrigger(jobCronTrigger, cronExpression);
-        triggerManager.updateTrigger(triggerName, triggerGroup, cronExpression);
+        triggerManager.updateTrigger(jobCronTrigger);
     }
 
     private JobCronTrigger findJobCronTrigger(String triggerName, String triggerGroup) {
@@ -60,8 +60,7 @@ public class TriggerService {
     private String generateCronExpression(CronExpressionUpdateRequest request) {
         Frequency frequency = Frequency.from(request.frequency());
         List<String> selectedDays = frequency.getSelectedDays(request.daysOfWeek(), request.daysOfMonth());
-        return CronExpressionGenerator.generateCronExpression(
-                frequency, selectedDays, request.getHour(), request.getMinute(), request.specificDate());
+        return CronExpressionGenerator.generateCronExpression(frequency, selectedDays, request.getHour(), request.getMinute(), request.specificDate());
     }
 
     private void updateAndSaveTrigger(JobCronTrigger jobCronTrigger, String cronExpression) {

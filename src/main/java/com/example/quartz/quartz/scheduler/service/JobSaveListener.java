@@ -4,6 +4,7 @@ import com.example.quartz.quartz.job.model.ScheduleJob;
 import com.example.quartz.quartz.scheduler.dto.JobSaveMessage;
 import com.example.quartz.quartz.trigger.model.JobCronTrigger;
 import com.example.quartz.quartz.trigger.model.JobTrigger;
+import com.example.quartz.quartz.trigger.util.TriggerGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
@@ -53,16 +54,8 @@ public class JobSaveListener {
     }
 
     private Set<Trigger> createTriggersForJob(JobTrigger jobTrigger, JobCronTrigger jobCronTrigger) {
-        return Set.of(createTrigger(jobTrigger, jobCronTrigger));
-    }
-
-    private Trigger createTrigger(JobTrigger jobTrigger, JobCronTrigger jobCronTrigger) {
-        return TriggerBuilder.newTrigger()
-                .withIdentity(jobTrigger.getTriggerName(), jobTrigger.getTriggerGroup())
-                .withSchedule(CronScheduleBuilder.cronSchedule(jobCronTrigger.getCronExpression())
-                        .withMisfireHandlingInstructionFireAndProceed())
-                .forJob(jobTrigger.getJobName())
-                .build();
+        Trigger cronTrigger = TriggerGenerator.createCronTrigger(jobCronTrigger, jobTrigger.getJobName());
+        return Set.of(cronTrigger);
     }
 
     private Class<? extends Job> getJobClass(String jobClassName) {

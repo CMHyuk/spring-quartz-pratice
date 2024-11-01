@@ -13,7 +13,9 @@ public class CronExpressionGenerator {
             case DAILY -> createDailyCron(hour, minute);
             case WEEKLY -> createWeeklyCron(selectedDays, hour, minute);
             case MONTHLY -> createMonthlyCron(selectedDays, hour, minute);
+            case LAST_DAY_OF_MONTH -> createLastDayOfMonthCron(hour, minute);
             case YEARLY -> createYearlyCron(specificDate, hour, minute);
+            case FIRST_WEEKDAY -> createFirstWeekdayCron(hour, minute);
             case LAST_WEEKDAY -> createLastWeekdayCron(hour, minute);
             case SPECIFIC_DATE -> createSpecificDateCron(specificDate, hour, minute);
         };
@@ -40,6 +42,10 @@ public class CronExpressionGenerator {
         return String.format("0 %d %d %s %s ? *", minute, hour, dateParts[1], dateParts[0]);
     }
 
+    private static String createFirstWeekdayCron(int hour, int minute) {
+        return String.format("0 %d %d 1W * ?", minute, hour);
+    }
+
     private static String createLastWeekdayCron(int hour, int minute) {
         return String.format("0 %d %d LW * ?", minute, hour);
     }
@@ -47,6 +53,10 @@ public class CronExpressionGenerator {
     private static String createSpecificDateCron(String date, int hour, int minute) {
         String[] dateParts = date.split("-");
         return String.format("0 %d %d %s %s ? %s", minute, hour, dateParts[2], dateParts[1], dateParts[0]);
+    }
+
+    private static String createLastDayOfMonthCron(int hour, int minute) {
+        return String.format("0 %d %d L * ?", minute, hour);
     }
 
     private static String convertDaysToCronFormat(List<String> days) {

@@ -33,12 +33,11 @@ public class JobSaveListener {
 
     private void scheduleNewJob(JobSaveMessage jobSaveMessage) throws SchedulerException {
         ScheduleJob scheduleJob = jobSaveMessage.scheduleJob();
-        JobTrigger jobTrigger = jobSaveMessage.jobTrigger();
         JobCronTrigger jobCronTrigger = jobSaveMessage.jobCronTrigger();
 
         Map<JobDetail, Set<? extends Trigger>> scheduleJobs = Map.of(
                 createJobDetail(scheduleJob),
-                createTriggersForJob(jobTrigger, jobCronTrigger)
+                createTriggersForJob(jobCronTrigger)
         );
 
         scheduler.scheduleJobs(scheduleJobs, true);
@@ -53,8 +52,8 @@ public class JobSaveListener {
                 .build();
     }
 
-    private Set<Trigger> createTriggersForJob(JobTrigger jobTrigger, JobCronTrigger jobCronTrigger) {
-        Trigger cronTrigger = TriggerGenerator.createCronTrigger(jobCronTrigger, jobTrigger.getJobName());
+    private Set<Trigger> createTriggersForJob(JobCronTrigger jobCronTrigger) {
+        Trigger cronTrigger = TriggerGenerator.createCronTrigger(jobCronTrigger);
         return Set.of(cronTrigger);
     }
 

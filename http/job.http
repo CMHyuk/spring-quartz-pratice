@@ -4,20 +4,21 @@ Content-Type: application/json
 
 {
   "scheduleJobSaveRequest": {
-    "jobName": "memberSaveJob",
+    "jobName": "memberUpdateJob",
     "jobGroup": "DEFAULT",
-    "jobClassName": "com.example.quartz.member.MemberSaveJobExecutor",
+    "jobClassName": "com.example.quartz.member.MemberUpdateJobExecutor",
     "isDurable": false,
     "requestRecovery": true
   },
   "jobTriggerSaveRequest": {
-    "jobName": "memberSaveJob",
-    "triggerName": "MemberSaveTrigger",
+    "jobName": "memberUpdateJob",
+    "jobGroup": "DEFAULT",
+    "triggerName": "MemberUpdateTrigger",
     "triggerGroup": "DEFAULT",
     "triggerType": "cron"
   },
   "cronTriggerSaveRequest": {
-    "triggerName": "MemberSaveTrigger",
+    "triggerName": "MemberUpdateTrigger",
     "triggerGroup": "DEFAULT",
     "timeZone" : "Asia/Seoul",
     "misFirePolicy" : "FIRE_AND_PROCEED",
@@ -35,14 +36,14 @@ Content-Type: application/json
 }
 
 ### CronExpression 업데이트
-POST http://localhost:8080/cron-expression/MemberSaveTrigger/DEFAULT
+POST http://localhost:8080/cron-expression/MemberUpdateTrigger/DEFAULT
 Content-Type: application/json
 
 {
-  "frequency": "LAST_WEEKDAY",
+  "frequency": "DAILY",
   "time": {
-    "hour": 16,
-    "minute": 47
+    "hour": 11,
+    "minute": 49
   }
 }
 

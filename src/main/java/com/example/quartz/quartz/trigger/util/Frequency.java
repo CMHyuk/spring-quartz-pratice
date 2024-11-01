@@ -10,9 +10,12 @@ public enum Frequency {
     DAILY,
     WEEKLY,
     MONTHLY,
+    LAST_DAY_OF_MONTH,
     YEARLY,
+    FIRST_WEEKDAY,
     LAST_WEEKDAY,
     SPECIFIC_DATE
+
     ;
 
     public static Frequency from(String frequency) {

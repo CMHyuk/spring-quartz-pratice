@@ -3,6 +3,9 @@ elasticsearch:
   port: 9200
 
 spring:
+#  quartz:
+#    properties:
+#      org.quartz.jobStore.misfireThreshold: 10000
   session:
     timeout: 86000
   data:

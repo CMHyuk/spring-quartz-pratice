@@ -1,0 +1,6 @@
+spring:
+  quartz:
+    properties:
+      org.quartz.jobStore.misfireThreshold: 1000
+
+

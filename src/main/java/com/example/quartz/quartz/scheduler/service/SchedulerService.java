@@ -4,9 +4,7 @@ import com.example.quartz.quartz.job.model.ScheduleJob;
 import com.example.quartz.quartz.job.service.ScheduleJobService;
 import com.example.quartz.quartz.scheduler.dto.JobSaveMessage;
 import com.example.quartz.quartz.scheduler.dto.CronJobSaveRequest;
-import com.example.quartz.quartz.scheduler.dto.SimpleJobSaveRequest;
 import com.example.quartz.quartz.trigger.model.JobCronTrigger;
-import com.example.quartz.quartz.trigger.model.JobSimpleTrigger;
 import com.example.quartz.quartz.trigger.model.JobTrigger;
 import com.example.quartz.quartz.trigger.service.TriggerService;
 import com.example.quartz.quartz.trigger.util.TriggerGenerator;
@@ -42,27 +40,18 @@ public class SchedulerService {
         log.info("새로운 Job을 저장하고 큐에 메시지 전송");
     }
 
-    public void registerSimpleJob(SimpleJobSaveRequest request) {
-        ScheduleJob scheduleJob = scheduleJobService.saveJobDetail(request.scheduleJobSaveRequest());
-        JobTrigger jobTrigger = triggerService.saveJobTrigger(request.jobTriggerSaveRequest());
-        JobSimpleTrigger jobSimpleTrigger = triggerService.saveSimpleTrigger(request.simpleTriggerSaveRequest());
-
-        //scheduleAndPublishCronJob(scheduleJob, jobTrigger, jobSimpleTrigger);
-        log.info("새로운 Job을 저장하고 큐에 메시지 전송");
-    }
-
     private void scheduleAndPublishCronJob(ScheduleJob scheduleJob, JobTrigger jobTrigger, JobCronTrigger jobCronTrigger) {
         try {
-            scheduler.scheduleJobs(createScheduleJobs(scheduleJob, jobTrigger, jobCronTrigger), true);
+            scheduler.scheduleJobs(createScheduleJobs(scheduleJob, jobCronTrigger), true);
             publishJobSaveMessage(scheduleJob, jobTrigger, jobCronTrigger);
         } catch (SchedulerException e) {
-            throw new RuntimeException("새로운 Job 저장에 실패: " + e.getMessage(), e);
+            throw new IllegalStateException("새로운 Job 저장에 실패: " + e.getMessage(), e);
         }
     }
 
-    private Map<JobDetail, Set<? extends Trigger>> createScheduleJobs(ScheduleJob scheduleJob, JobTrigger jobTrigger, JobCronTrigger jobCronTrigger) {
+    private Map<JobDetail, Set<? extends Trigger>> createScheduleJobs(ScheduleJob scheduleJob, JobCronTrigger jobCronTrigger) {
         JobDetail jobDetail = createJobDetail(scheduleJob);
-        Set<Trigger> triggers = createTriggersForJob(jobTrigger, jobCronTrigger);
+        Set<Trigger> triggers = createTriggersForJob(jobCronTrigger);
         return Map.of(jobDetail, triggers);
     }
 
@@ -75,8 +64,8 @@ public class SchedulerService {
                 .build();
     }
 
-    private Set<Trigger> createTriggersForJob(JobTrigger jobTrigger, JobCronTrigger jobCronTrigger) {
-        Trigger trigger = TriggerGenerator.createCronTrigger(jobCronTrigger, jobTrigger.getJobName());
+    private Set<Trigger> createTriggersForJob(JobCronTrigger jobCronTrigger) {
+        Trigger trigger = TriggerGenerator.createCronTrigger(jobCronTrigger);
         return Set.of(trigger);
     }
 
@@ -84,7 +73,7 @@ public class SchedulerService {
         try {
             return (Class<? extends Job>) Class.forName(jobClassName);
         } catch (ClassNotFoundException e) {
-            throw new RuntimeException("Job class를 찾을 수 없습니다: " + jobClassName, e);
+            throw new IllegalStateException("Job Class를 찾을 수 없습니다: " + jobClassName, e);
         }
     }
 

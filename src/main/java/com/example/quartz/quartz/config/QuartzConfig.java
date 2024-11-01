@@ -7,6 +7,7 @@ import com.example.quartz.quartz.trigger.repository.JobTriggerRepository;
 import com.example.quartz.quartz.trigger.service.TriggerFactory;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.quartz.*;
 import org.springframework.context.annotation.Configuration;
 
@@ -15,6 +16,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Configuration
 @RequiredArgsConstructor
 public class QuartzConfig {
@@ -25,7 +27,7 @@ public class QuartzConfig {
     private final TriggerFactory triggerFactory;
 
     @PostConstruct
-    public void initializeJobSchedules() throws SchedulerException {
+    public void initializeJobSchedules() {
         List<ScheduleJob> jobDetails = scheduleJobRepository.findAll();
 
         Map<JobDetail, Set<? extends Trigger>> scheduleJobs = jobDetails.stream()
@@ -34,7 +36,7 @@ public class QuartzConfig {
                         this::createTriggersForJob
                 ));
 
-        scheduler.scheduleJobs(scheduleJobs, true);
+        scheduleJobs.entrySet().forEach(this::scheduleJobWithTriggers);
     }
 
     private JobDetail createJobDetail(ScheduleJob scheduleJob) {
@@ -48,18 +50,32 @@ public class QuartzConfig {
     }
 
     private Set<Trigger> createTriggersForJob(ScheduleJob scheduleJob) {
-        List<JobTrigger> jobTriggers = jobTriggerRepository.findAllByJobName(scheduleJob.getJobName());
+        List<JobTrigger> jobTriggers = jobTriggerRepository.findAllByJobNameJobGroup(scheduleJob.getJobName(), scheduleJob.getJobGroup());
 
         return jobTriggers.stream()
                 .map(this::createTrigger)
                 .collect(Collectors.toSet());
     }
 
+    private void scheduleJobWithTriggers(Map.Entry<JobDetail, Set<? extends Trigger>> jobDetailEntry) {
+        JobDetail jobDetail = jobDetailEntry.getKey();
+        Set<? extends Trigger> triggers = jobDetailEntry.getValue();
+        triggers.forEach(trigger -> scheduleJob(jobDetail, trigger));
+    }
+
+    private void scheduleJob(JobDetail jobDetail, Trigger trigger) {
+        try {
+            scheduler.scheduleJob(jobDetail, trigger);
+        } catch (SchedulerException e) {
+            log.error("Scheduler error for job: {} with trigger: {}", jobDetail.getKey(), trigger.getKey(), e);
+        }
+    }
+
     private Class<? extends Job> getJobClass(String jobClassName) {
         try {
             return (Class<? extends Job>) Class.forName(jobClassName);
         } catch (ClassNotFoundException e) {
-            throw new RuntimeException("Job class not found: " + jobClassName, e);
+            throw new IllegalStateException("Job class not found: " + jobClassName, e);
         }
     }
 

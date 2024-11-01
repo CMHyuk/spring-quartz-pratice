@@ -7,6 +7,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.IntStream;
 
 @Repository
@@ -14,18 +15,18 @@ import java.util.stream.IntStream;
 public class MemberRepository {
 
     private static final String TENANT_ID = "abcedfg";
+    private static final String NAME_KEYWORD = "name.keyword";
 
     private final MemberBaseRepository memberBaseRepository;
 
-    public void save() {
-        memberBaseRepository.save(TENANT_ID, new Member("멤버"));
+    public void save(Member member) {
+        memberBaseRepository.save(TENANT_ID, member);
     }
 
-    public void deleteAll() {
-        BoolQueryBuilder query = QueryBuilders.boolQuery()
-                .must(QueryBuilders.matchAllQuery());
-        List<Member> members = memberBaseRepository.findAll(TENANT_ID, query, Sort.unsorted());
-        memberBaseRepository.deleteAll(TENANT_ID, members);
+    public Optional<Member> findByName(String name) {
+        BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery()
+                .filter(QueryBuilders.termQuery(NAME_KEYWORD, name));
+        return Optional.ofNullable(memberBaseRepository.find(TENANT_ID, boolQueryBuilder));
     }
 
 }

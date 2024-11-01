@@ -4,6 +4,8 @@ import com.example.quartz.quartz.job.model.ScheduleJob;
 import com.example.quartz.quartz.job.repository.ScheduleJobRepository;
 import com.example.quartz.quartz.trigger.dto.TriggerUpdateMessage;
 import com.example.quartz.quartz.trigger.model.JobCronTrigger;
+import com.example.quartz.quartz.trigger.model.JobTrigger;
+import com.example.quartz.quartz.trigger.repository.JobTriggerRepository;
 import com.example.quartz.quartz.trigger.util.TriggerGenerator;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -23,6 +25,7 @@ public class TriggerManager {
 
     private final Scheduler scheduler;
     private final RabbitTemplate rabbitTemplate;
+    private final JobTriggerRepository jobTriggerRepository;
     private final ScheduleJobRepository scheduleJobRepository;
 
     public void updateTrigger(JobCronTrigger jobCronTrigger) {
@@ -43,20 +46,54 @@ public class TriggerManager {
 
     private void buildAndUpdateTrigger(TriggerKey triggerKey, JobCronTrigger jobCronTrigger) {
         try {
-            Trigger oldTrigger = findExistingTrigger(triggerKey);
-            Trigger newTrigger = TriggerGenerator.createCronTrigger(jobCronTrigger, oldTrigger.getJobKey().getName());
+            Trigger oldTrigger = scheduler.getTrigger(triggerKey);
+            Trigger newTrigger = TriggerGenerator.createCronTrigger(jobCronTrigger);
+
+            if (oldTrigger == null) {
+                JobDetail jobDetail = getJobDetailForNewTrigger(jobCronTrigger);
+                scheduler.scheduleJob(jobDetail, newTrigger);
+                return;
+            }
+
             scheduler.rescheduleJob(triggerKey, newTrigger);
         } catch (SchedulerException e) {
-            throw new RuntimeException("트리거 업데이트 중 에러가 발생했습니다: " + e.getMessage(), e);
+            throw new IllegalStateException("트리거 업데이트 중 에러가 발생했습니다: " + e.getMessage(), e);
         }
     }
 
-    private Trigger findExistingTrigger(TriggerKey triggerKey) throws SchedulerException {
-        Trigger oldTrigger = scheduler.getTrigger(triggerKey);
-        if (oldTrigger == null) {
-            throw new SchedulerException("트리거를 찾을 수 없습니다: " + triggerKey.getName());
+    private JobDetail getJobDetailForNewTrigger(JobCronTrigger jobCronTrigger) {
+        JobTrigger jobTrigger = getJobTrigger(jobCronTrigger);
+        ScheduleJob scheduleJob = getScheduleJob(jobTrigger);
+        return createJobDetail(scheduleJob);
+    }
+
+    private JobTrigger getJobTrigger(JobCronTrigger jobCronTrigger) {
+        return jobTriggerRepository.findByTriggerNameAndTriggerGroup(
+                        jobCronTrigger.getTriggerName(), jobCronTrigger.getTriggerGroup())
+                .orElseThrow(() -> new EntityNotFoundException("Trigger를 찾을 수 없습니다."));
+    }
+
+    private ScheduleJob getScheduleJob(JobTrigger jobTrigger) {
+        return scheduleJobRepository.findByJobNameAndJobGroup(
+                        jobTrigger.getJobName(), jobTrigger.getJobGroup())
+                .orElseThrow(() -> new EntityNotFoundException("Job을 찾을 수 없습니다."));
+    }
+
+    private JobDetail createJobDetail(ScheduleJob scheduleJob) {
+        Class<? extends Job> jobClass = getJobClass(scheduleJob.getJobClassName());
+        return JobBuilder.newJob(jobClass)
+                .withIdentity(scheduleJob.getJobName(), scheduleJob.getJobGroup())
+                .storeDurably(scheduleJob.isDurable())
+                .requestRecovery(scheduleJob.isRequestRecovery())
+                .build();
+    }
+
+    private Class<? extends Job> getJobClass(String jobClassName) {
+        try {
+            return (Class<? extends Job>) Class.forName(jobClassName);
+        } catch (ClassNotFoundException e) {
+            throw new IllegalStateException("Job Class를 찾을 수 없습니다: " + jobClassName, e);
         }
-        return oldTrigger;
     }
 
     private void publishUpdateMessage(String triggerName, String triggerGroup, String cronExpression) {
@@ -73,7 +110,7 @@ public class TriggerManager {
         try {
             scheduler.triggerJob(JobKey.jobKey(jobName, jobGroup));
         } catch (SchedulerException e) {
-            throw new RuntimeException("Job 실행 중 에러가 발생했습니다: " + e.getMessage(), e);
+            throw new IllegalStateException("Job 실행 중 에러가 발생했습니다: " + e.getMessage(), e);
         }
     }
 

@@ -14,7 +14,15 @@ public class ScheduleJobService {
 
     public ScheduleJob saveJobDetail(ScheduleJobSaveRequest request) {
         ScheduleJob scheduleJob = request.toJobSchedule();
+        validateJob(request.jobName(), request.jobGroup());
         return scheduleJobRepository.save(scheduleJob);
+    }
+
+    private void validateJob(String jobName, String jobGroup) {
+        scheduleJobRepository.findByJobNameAndJobGroup(jobName, jobGroup)
+                .ifPresent(job -> {
+                    throw new IllegalStateException("Job already exists with name: " + jobName + " and group: " + jobGroup);
+                });
     }
 
 }

@@ -19,18 +19,20 @@ import static lombok.AccessLevel.*;
 public class JobTrigger extends BaseEntity {
 
     private String jobName;
+    private String jobGroup;
     private String triggerName;
     private String triggerGroup;
 
     @Enumerated(EnumType.STRING)
     private TriggerType triggerType;
 
-    public static JobTrigger of(String jobName, String triggerName, String triggerGroup, TriggerType triggerType) {
-        return new JobTrigger(jobName, triggerName, triggerGroup, triggerType);
+    public static JobTrigger of(String jobName, String jobGroup, String triggerName, String triggerGroup, TriggerType triggerType) {
+        return new JobTrigger(jobName, jobGroup, triggerName, triggerGroup, triggerType);
     }
 
-    private JobTrigger(String jobName, String triggerName, String triggerGroup, TriggerType triggerType) {
+    private JobTrigger(String jobName, String jobGroup, String triggerName, String triggerGroup, TriggerType triggerType) {
         this.jobName = jobName;
+        this.jobGroup = jobGroup;
         this.triggerName = triggerName;
         this.triggerGroup = triggerGroup;
         this.triggerType = triggerType;

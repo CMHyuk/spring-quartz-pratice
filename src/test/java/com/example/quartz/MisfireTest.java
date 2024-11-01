@@ -2,7 +2,6 @@ package com.example.quartz;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.quartz.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,57 +27,53 @@ class MisfireTest {
         wasExecuted.set(false);
     }
 
-    @Nested
-    @DisplayName("미스파이어가 발생하면")
-    class MisfirePolicyTest {
+    @Test
+    @DisplayName("미스 파이어가 발생하면 즉시 실행한다.")
+    void fireAndProceedTest() throws Exception {
+        // given
+        createSchedule(CronScheduleBuilder.cronSchedule(CRON_EXPRESSION)
+                .withMisfireHandlingInstructionFireAndProceed());
 
-        @Test
-        void 즉시_실행한다() throws Exception {
-            // given
-            createSchedule(CronScheduleBuilder.cronSchedule(CRON_EXPRESSION)
-                    .withMisfireHandlingInstructionFireAndProceed());
+        // when
+        triggerMisfire();
 
-            // when
-            triggerMisfire();
+        // then
+        assertThat(wasExecuted).isTrue();
+    }
 
-            // then
-            assertThat(wasExecuted).isTrue();
-        }
+    @Test
+    @DisplayName("미스 파이어가 발생하면 실행하지 않는다.")
+    void doNothingTest() throws Exception {
+        // given
+        createSchedule(CronScheduleBuilder.cronSchedule(CRON_EXPRESSION)
+                .withMisfireHandlingInstructionDoNothing());
 
-        @Test
-        void 실행하지_않는다() throws Exception {
-            // given
-            createSchedule(CronScheduleBuilder.cronSchedule(CRON_EXPRESSION)
-                    .withMisfireHandlingInstructionDoNothing());
+        // when
+        triggerMisfire();
 
-            // when
-            triggerMisfire();
+        // then
+        assertThat(wasExecuted).isFalse();
+    }
 
-            // then
-            assertThat(wasExecuted).isFalse();
-        }
+    private void createSchedule(CronScheduleBuilder scheduleBuilder) throws SchedulerException {
+        JobDetail jobDetail = JobBuilder.newJob(TestJob.class)
+                .withIdentity("fireAndProceedJob", "testGroup")
+                .build();
 
-        private void createSchedule(CronScheduleBuilder scheduleBuilder) throws SchedulerException {
-            JobDetail jobDetail = JobBuilder.newJob(TestJob.class)
-                    .withIdentity("fireAndProceedJob", "testGroup")
-                    .build();
+        Trigger trigger = TriggerBuilder.newTrigger()
+                .withIdentity("fireAndProceedTrigger", "testGroup")
+                .withSchedule(scheduleBuilder)
+                .startNow()
+                .build();
 
-            Trigger trigger = TriggerBuilder.newTrigger()
-                    .withIdentity("fireAndProceedTrigger", "testGroup")
-                    .withSchedule(scheduleBuilder)
-                    .startNow()
-                    .build();
+        scheduler.scheduleJob(jobDetail, trigger);
+    }
 
-            scheduler.scheduleJob(jobDetail, trigger);
-        }
-
-        private void triggerMisfire() throws SchedulerException, InterruptedException {
-            scheduler.standby();
-            Thread.sleep(7000);
-            scheduler.start();
-            Thread.sleep(500);
-        }
-
+    private void triggerMisfire() throws SchedulerException, InterruptedException {
+        scheduler.standby();
+        Thread.sleep(8000);
+        scheduler.start();
+        Thread.sleep(500);
     }
 
     public static class TestJob implements Job {

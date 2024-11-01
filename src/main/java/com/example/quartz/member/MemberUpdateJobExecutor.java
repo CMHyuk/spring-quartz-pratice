@@ -10,16 +10,19 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class MemberSaveJobExecutor implements Job {
+public class MemberUpdateJobExecutor implements Job {
 
     private final MemberRepository memberRepository;
 
     @Override
-    @DistributedLock(key = "memberJobLock")
+    @DistributedLock(key = "memberUpdateLock")
     public void execute(JobExecutionContext jobExecutionContext) {
-        log.info("Member save job started.");
-        memberRepository.save(new Member("멤버"));
-        log.info("Member save job finished.");
+        log.info("Member update job started.");
+        Member member = memberRepository.findByName("멤버")
+                .orElseThrow(IllegalArgumentException::new);
+        member.updateName("새로운 멤버");
+        memberRepository.save(member);
+        log.info("Member update job finished.");
     }
 
 }

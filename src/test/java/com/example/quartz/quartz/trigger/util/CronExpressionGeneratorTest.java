@@ -85,4 +85,14 @@ class CronExpressionGeneratorTest {
         assertThat(cron).isEqualTo("0 0 9 LW * ?");
     }
 
+    @Test
+    @DisplayName("매월 마지막 날에 실행하는 크론 표현식 생성")
+    void generateLastDayOfMonthCronExpression() {
+        // when
+        String cron = CronExpressionGenerator.generateCronExpression(Frequency.LAST_DAY_OF_MONTH, null, 17, 0, null);
+
+        // then
+        assertThat(cron).isEqualTo("0 0 17 L * ?");
+    }
+
 }

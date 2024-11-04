@@ -19,13 +19,13 @@ public class TriggerController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/cron-trigger/register")
+    @PostMapping("/cron-trigger")
     public ResponseEntity<Void> addCronTrigger(@RequestBody TriggerSaveRequest request) {
         triggerService.addCronTrigger(request);
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/job-trigger/{jobName}/{jobGroup}")
+    @PostMapping("/job/{jobName}/{jobGroup}/run")
     public ResponseEntity<Void> resumeTrigger(@PathVariable String jobName, @PathVariable String jobGroup) {
         triggerService.triggerJob(jobName, jobGroup);
         return ResponseEntity.ok().build();

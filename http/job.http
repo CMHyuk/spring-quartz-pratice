@@ -1,5 +1,5 @@
-### 스케줄 저장
-POST http://localhost:8080/job/register
+### CronJob 저장
+POST http://localhost:8080/cron-job
 Content-Type: application/json
 
 {
@@ -35,20 +35,20 @@ Content-Type: application/json
   }
 }
 
-### CronJob 저장
-POST http://localhost:8080/cron-trigger/register
+### CronTriggerJob 저장
+POST http://localhost:8080/cron-trigger
 Content-Type: application/json
 
 {
   "jobTriggerSaveRequest": {
     "jobName": "memberSaveJob",
     "jobGroup": "DEFAULT",
-    "triggerName": "MemberSaveTriggerV3",
+    "triggerName": "MemberSaveTriggerV4",
     "triggerGroup": "DEFAULT",
     "triggerType": "cron"
   },
   "cronTriggerSaveRequest": {
-    "triggerName": "MemberSaveTriggerV3",
+    "triggerName": "MemberSaveTriggerV4",
     "triggerGroup": "DEFAULT",
     "timeZone" : "Asia/Seoul",
     "misFirePolicy" : "FIRE_AND_PROCEED",
@@ -56,7 +56,7 @@ Content-Type: application/json
       "frequency": "HOURLY",
       "time": {
         "hour": "",
-        "minute": 19
+        "minute": 30
       },
       "daysOfWeek": [],
       "daysOfMonth": [],
@@ -84,4 +84,4 @@ Content-Type: application/json
 DELETE http://localhost:8080/cron-trigger/MemberSaveTriggerV2/DEFAULT
 
 ### 스케줄러 즉시 실행
-POST http://localhost:8080/job-trigger/memberSaveJob/DEFAULT
+POST http://localhost:8080/job/memberSaveJob/DEFAULT/run

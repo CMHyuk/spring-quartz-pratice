@@ -12,9 +12,9 @@ public class SchedulerController {
 
     private final SchedulerService schedulerService;
 
-    @PostMapping("/job/register")
-    public ResponseEntity<Void> registerJob(@RequestBody CronJobSaveRequest request) {
-        schedulerService.registerJob(request);
+    @PostMapping("/cron-job")
+    public ResponseEntity<Void> registerCronJob(@RequestBody CronJobSaveRequest request) {
+        schedulerService.registerCronJob(request);
         return ResponseEntity.ok().build();
     }
 

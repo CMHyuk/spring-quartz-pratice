@@ -31,7 +31,7 @@ public class SchedulerService {
     private final TriggerService triggerService;
     private final ScheduleJobService scheduleJobService;
 
-    public void registerJob(CronJobSaveRequest request) {
+    public void registerCronJob(CronJobSaveRequest request) {
         ScheduleJob scheduleJob = scheduleJobService.saveJobDetail(request.scheduleJobSaveRequest());
         JobTrigger jobTrigger = triggerService.saveJobTrigger(request.jobTriggerSaveRequest());
         JobCronTrigger jobCronTrigger = triggerService.saveCronTrigger(request.cronTriggerSaveRequest());

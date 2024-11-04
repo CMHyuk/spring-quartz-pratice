@@ -65,7 +65,16 @@ public class QuartzConfig {
 
     private void scheduleJob(JobDetail jobDetail, Trigger trigger) {
         try {
+            JobKey jobKey = jobDetail.getKey();
+
+            if (scheduler.checkExists(jobKey)) {
+                scheduler.scheduleJob(trigger);
+                log.info("기존 Job에 새로운 Trigger를 추가했습니다: {} - {}", jobKey, trigger.getKey());
+                return;
+            }
+
             scheduler.scheduleJob(jobDetail, trigger);
+            log.info("새로운 Job과 Trigger를 등록했습니다: {} - {}", jobKey, trigger.getKey());
         } catch (SchedulerException e) {
             log.error("Scheduler error for job: {} with trigger: {}", jobDetail.getKey(), trigger.getKey(), e);
         }

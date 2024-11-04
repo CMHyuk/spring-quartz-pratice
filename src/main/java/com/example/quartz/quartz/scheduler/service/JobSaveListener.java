@@ -37,7 +37,7 @@ public class JobSaveListener {
 
         Map<JobDetail, Set<? extends Trigger>> scheduleJobs = Map.of(
                 createJobDetail(scheduleJob),
-                createTriggersForJob(jobCronTrigger)
+                createTriggersForJob(scheduleJob.getJobName(), scheduleJob.getJobGroup(), jobCronTrigger)
         );
 
         scheduler.scheduleJobs(scheduleJobs, true);
@@ -52,8 +52,8 @@ public class JobSaveListener {
                 .build();
     }
 
-    private Set<Trigger> createTriggersForJob(JobCronTrigger jobCronTrigger) {
-        Trigger cronTrigger = TriggerGenerator.createCronTrigger(jobCronTrigger);
+    private Set<Trigger> createTriggersForJob(String jobName, String jobGroup, JobCronTrigger jobCronTrigger) {
+        Trigger cronTrigger = TriggerGenerator.createCronTrigger(jobName, jobGroup, jobCronTrigger);
         return Set.of(cronTrigger);
     }
 

@@ -39,17 +39,17 @@ public class TriggerUpdateListener {
         String triggerName = updateMessage.triggerName();
         String triggerGroup = updateMessage.triggerGroup();
 
+        JobTrigger jobTrigger = jobTriggerRepository.findByTriggerNameAndTriggerGroup(triggerName, triggerGroup)
+                .orElseThrow(EntityNotFoundException::new);
+
         JobCronTrigger jobCronTrigger = jobCronTriggerRepository.findByTriggerNameAndTriggerGroup(triggerName, triggerGroup)
                 .orElseThrow(EntityNotFoundException::new);
 
-        Trigger newTrigger = TriggerGenerator.createCronTrigger(jobCronTrigger);
+        Trigger newTrigger = TriggerGenerator.createCronTrigger(jobTrigger.getJobName(), jobTrigger.getJobGroup(), jobCronTrigger);
 
         TriggerKey triggerKey = TriggerKey.triggerKey(triggerName, triggerGroup);
         Trigger oldTrigger = scheduler.getTrigger(triggerKey);
         if (oldTrigger == null) {
-            JobTrigger jobTrigger = jobTriggerRepository.findByTriggerNameAndTriggerGroup(jobCronTrigger.getTriggerName(), jobCronTrigger.getTriggerGroup())
-                    .orElseThrow();
-
             ScheduleJob scheduleJob = scheduleJobRepository.findByJobNameAndJobGroup(jobTrigger.getJobName(), jobTrigger.getJobGroup())
                     .orElseThrow();
 

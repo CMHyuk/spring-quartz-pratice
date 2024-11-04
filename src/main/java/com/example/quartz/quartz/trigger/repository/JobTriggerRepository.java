@@ -40,4 +40,7 @@ public class JobTriggerRepository {
         return Optional.ofNullable(jobTriggerBaseRepository.find(TENANT_ID, boolQueryBuilder));
     }
 
+    public void delete(JobTrigger jobTrigger) {
+        jobTriggerBaseRepository.delete(TENANT_ID, jobTrigger);
+    }
 }

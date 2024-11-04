@@ -28,7 +28,7 @@ public class TriggerManager {
     private final JobTriggerRepository jobTriggerRepository;
     private final ScheduleJobRepository scheduleJobRepository;
 
-    public void updateTrigger(JobCronTrigger jobCronTrigger) {
+    public void updateCronTrigger(JobCronTrigger jobCronTrigger) {
         String triggerName = jobCronTrigger.getTriggerName();
         String triggerGroup = jobCronTrigger.getTriggerGroup();
 
@@ -39,43 +39,63 @@ public class TriggerManager {
         log.info("스케줄 업데이트 적용: {}", jobCronTrigger.getCronExpression());
     }
 
+    public void deleteCronTrigger(String triggerName, String triggerGroup) {
+        try {
+            TriggerKey triggerKey = TriggerKey.triggerKey(triggerName, triggerGroup);
+            scheduler.unscheduleJob(triggerKey);
+        } catch (Exception e) {
+            throw new IllegalStateException(e.getMessage());
+        }
+    }
+
     public void triggerJob(String jobName, String jobGroup) {
-        ScheduleJob scheduleJob = findScheduleJob(jobName, jobGroup);
-        executeJob(scheduleJob.getJobName(), jobGroup);
+        scheduleJobRepository.findByJobNameAndJobGroup(jobName, jobGroup)
+                .ifPresentOrElse(scheduleJob -> executeJob(jobName, jobGroup),
+                        () -> new EntityNotFoundException("스케줄 작업을 찾을 수 없습니다: " + jobName)
+                );
     }
 
     private void buildAndUpdateTrigger(TriggerKey triggerKey, JobCronTrigger jobCronTrigger) {
         try {
             Trigger oldTrigger = scheduler.getTrigger(triggerKey);
-            Trigger newTrigger = TriggerGenerator.createCronTrigger(jobCronTrigger);
 
             if (oldTrigger == null) {
-                JobDetail jobDetail = getJobDetailForNewTrigger(jobCronTrigger);
-                scheduler.scheduleJob(jobDetail, newTrigger);
+                scheduleNewJobWithTrigger(jobCronTrigger);
                 return;
             }
 
-            scheduler.rescheduleJob(triggerKey, newTrigger);
+            rescheduleExistingTrigger(oldTrigger, triggerKey, jobCronTrigger);
         } catch (SchedulerException e) {
             throw new IllegalStateException("트리거 업데이트 중 에러가 발생했습니다: " + e.getMessage(), e);
         }
     }
 
+    private void scheduleNewJobWithTrigger(JobCronTrigger jobCronTrigger) throws SchedulerException {
+        JobDetail jobDetail = getJobDetailForNewTrigger(jobCronTrigger);
+        JobKey jobKey = jobDetail.getKey();
+
+        Trigger newTrigger = TriggerGenerator.createCronTrigger(jobKey.getName(), jobKey.getGroup(), jobCronTrigger);
+
+        if (scheduler.checkExists(jobKey)) {
+            scheduler.scheduleJob(newTrigger);
+            return;
+        }
+
+        scheduler.scheduleJob(jobDetail, newTrigger);
+    }
+
+    private void rescheduleExistingTrigger(Trigger oldTrigger, TriggerKey triggerKey, JobCronTrigger jobCronTrigger) throws SchedulerException {
+        JobKey jobKey = oldTrigger.getJobKey();
+        Trigger newTrigger = TriggerGenerator.createCronTrigger(jobKey.getName(), jobKey.getGroup(), jobCronTrigger);
+        scheduler.rescheduleJob(triggerKey, newTrigger);
+    }
+
     private JobDetail getJobDetailForNewTrigger(JobCronTrigger jobCronTrigger) {
-        JobTrigger jobTrigger = getJobTrigger(jobCronTrigger);
-        ScheduleJob scheduleJob = getScheduleJob(jobTrigger);
-        return createJobDetail(scheduleJob);
-    }
-
-    private JobTrigger getJobTrigger(JobCronTrigger jobCronTrigger) {
-        return jobTriggerRepository.findByTriggerNameAndTriggerGroup(
-                        jobCronTrigger.getTriggerName(), jobCronTrigger.getTriggerGroup())
+        JobTrigger jobTrigger = jobTriggerRepository.findByTriggerNameAndTriggerGroup(jobCronTrigger.getTriggerName(), jobCronTrigger.getTriggerGroup())
                 .orElseThrow(() -> new EntityNotFoundException("Trigger를 찾을 수 없습니다."));
-    }
 
-    private ScheduleJob getScheduleJob(JobTrigger jobTrigger) {
-        return scheduleJobRepository.findByJobNameAndJobGroup(
-                        jobTrigger.getJobName(), jobTrigger.getJobGroup())
+        return scheduleJobRepository.findByJobNameAndJobGroup(jobTrigger.getJobName(), jobTrigger.getJobGroup())
+                .map(this::createJobDetail)
                 .orElseThrow(() -> new EntityNotFoundException("Job을 찾을 수 없습니다."));
     }
 
@@ -99,11 +119,6 @@ public class TriggerManager {
     private void publishUpdateMessage(String triggerName, String triggerGroup, String cronExpression) {
         TriggerUpdateMessage updateMessage = new TriggerUpdateMessage(triggerName, triggerGroup, cronExpression);
         rabbitTemplate.convertAndSend(exchangeName, null, updateMessage);
-    }
-
-    private ScheduleJob findScheduleJob(String jobName, String jobGroup) {
-        return scheduleJobRepository.findByJobNameAndJobGroup(jobName, jobGroup)
-                .orElseThrow(() -> new EntityNotFoundException("스케줄 작업을 찾을 수 없습니다: " + jobName));
     }
 
     private void executeJob(String jobName, String jobGroup) {

@@ -9,13 +9,14 @@ import java.util.TimeZone;
 
 public class TriggerGenerator {
 
-    public static Trigger createCronTrigger(JobCronTrigger jobCronTrigger) {
+    public static Trigger createCronTrigger(String jobName, String jobGroup, JobCronTrigger jobCronTrigger) {
         CronScheduleBuilder cronScheduleBuilder = CronScheduleBuilder.cronSchedule(jobCronTrigger.getCronExpression())
                 .inTimeZone(TimeZone.getTimeZone(jobCronTrigger.getTimeZone()));
 
         return TriggerBuilder.newTrigger()
                 .withIdentity(jobCronTrigger.getTriggerName(), jobCronTrigger.getTriggerGroup())
                 .withSchedule(jobCronTrigger.getMisFirePolicy().applyMisfirePolicy(cronScheduleBuilder))
+                .forJob(jobName, jobGroup)
                 .build();
     }
 

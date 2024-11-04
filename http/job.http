@@ -1,51 +1,87 @@
 ### 스케줄 저장
-POST http://localhost:8080/cron-job/register
+POST http://localhost:8080/job/register
 Content-Type: application/json
 
 {
   "scheduleJobSaveRequest": {
-    "jobName": "memberUpdateJob",
+    "jobName": "memberSaveJob",
     "jobGroup": "DEFAULT",
-    "jobClassName": "com.example.quartz.member.MemberUpdateJobExecutor",
+    "jobClassName": "com.example.quartz.member.MemberSaveJobExecutor",
     "isDurable": false,
     "requestRecovery": true
   },
   "jobTriggerSaveRequest": {
-    "jobName": "memberUpdateJob",
+    "jobName": "memberSaveJob",
     "jobGroup": "DEFAULT",
-    "triggerName": "MemberUpdateTrigger",
+    "triggerName": "MemberSaveTrigger",
     "triggerGroup": "DEFAULT",
     "triggerType": "cron"
   },
   "cronTriggerSaveRequest": {
-    "triggerName": "MemberUpdateTrigger",
+    "triggerName": "MemberSaveTrigger",
     "triggerGroup": "DEFAULT",
     "timeZone" : "Asia/Seoul",
     "misFirePolicy" : "FIRE_AND_PROCEED",
     "cronExpressionRequest": {
-      "frequency": "WEEKLY",
+      "frequency": "HOURLY",
       "time": {
-        "hour": 14,
-        "minute": 0
+        "hour": "",
+        "minute": 18
       },
-      "daysOfWeek": ["MON", "WED", "FRI"],
-      "daysOfMonth": ["1", "15"],
-      "specificDate": "2024-12-25"
+      "daysOfWeek": [],
+      "daysOfMonth": [],
+      "specificDate": ""
+    }
+  }
+}
+
+### CronJob 저장
+POST http://localhost:8080/cron-trigger/register
+Content-Type: application/json
+
+{
+  "jobTriggerSaveRequest": {
+    "jobName": "memberSaveJob",
+    "jobGroup": "DEFAULT",
+    "triggerName": "MemberSaveTriggerV3",
+    "triggerGroup": "DEFAULT",
+    "triggerType": "cron"
+  },
+  "cronTriggerSaveRequest": {
+    "triggerName": "MemberSaveTriggerV3",
+    "triggerGroup": "DEFAULT",
+    "timeZone" : "Asia/Seoul",
+    "misFirePolicy" : "FIRE_AND_PROCEED",
+    "cronExpressionRequest": {
+      "frequency": "HOURLY",
+      "time": {
+        "hour": "",
+        "minute": 19
+      },
+      "daysOfWeek": [],
+      "daysOfMonth": [],
+      "specificDate": ""
     }
   }
 }
 
 ### CronExpression 업데이트
-POST http://localhost:8080/cron-expression/MemberUpdateTrigger/DEFAULT
+PATCH http://localhost:8080/cron-expression/MemberSaveTriggerV3/DEFAULT
 Content-Type: application/json
 
 {
-  "frequency": "DAILY",
+  "frequency": "SPECIFIC_DATE",
   "time": {
-    "hour": 11,
-    "minute": 49
-  }
+    "hour": 16,
+    "minute": 22
+  },
+  "daysOfWeek": [],
+  "daysOfMonth": [],
+  "specificDate": "2024-11-4"
 }
+
+### Cron Trigger 삭제
+DELETE http://localhost:8080/cron-trigger/MemberSaveTriggerV2/DEFAULT
 
 ### 스케줄러 즉시 실행
 POST http://localhost:8080/job-trigger/memberSaveJob/DEFAULT

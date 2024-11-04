@@ -22,6 +22,10 @@ public class JobCronTriggerRepository {
         return jobCronTriggerBaseRepository.save(TENANT_ID, jobCronTrigger);
     }
 
+    public void delete(JobCronTrigger jobCronTrigger) {
+        jobCronTriggerBaseRepository.delete(TENANT_ID, jobCronTrigger);
+    }
+
     public Optional<JobCronTrigger> findByTriggerNameAndTriggerGroup(String triggerName, String triggerGroup) {
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery()
                 .filter(QueryBuilders.termQuery(TRIGGER_NAME_KEYWORD, triggerName))

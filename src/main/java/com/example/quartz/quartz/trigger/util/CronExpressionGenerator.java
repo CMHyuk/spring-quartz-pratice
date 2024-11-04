@@ -9,60 +9,32 @@ public class CronExpressionGenerator {
 
     public static String generateCronExpression(Frequency frequency, List<String> selectedDays, int hour, int minute, String specificDate) {
         return switch (frequency) {
-            case HOURLY -> createHourlyCron(minute);
-            case DAILY -> createDailyCron(hour, minute);
-            case WEEKLY -> createWeeklyCron(selectedDays, hour, minute);
-            case MONTHLY -> createMonthlyCron(selectedDays, hour, minute);
-            case LAST_DAY_OF_MONTH -> createLastDayOfMonthCron(hour, minute);
-            case YEARLY -> createYearlyCron(specificDate, hour, minute);
-            case FIRST_WEEKDAY -> createFirstWeekdayCron(hour, minute);
-            case LAST_WEEKDAY -> createLastWeekdayCron(hour, minute);
-            case SPECIFIC_DATE -> createSpecificDateCron(specificDate, hour, minute);
+            case HOURLY -> String.format("0 %d * * * ?", minute);
+            case DAILY -> String.format("0 %d %d * * ?", minute, hour);
+            case WEEKLY -> String.format("0 %d %d ? * %s *", minute, hour, convertDaysToCronFormat(selectedDays));
+            case MONTHLY -> String.format("0 %d %d %s * ?", minute, hour, String.join(",", selectedDays));
+            case LAST_DAY_OF_MONTH -> String.format("0 %d %d L * ?", minute, hour);
+            case YEARLY -> createYearlyCron(hour, minute, specificDate);
+            case FIRST_WEEKDAY -> String.format("0 %d %d 1W * ?", minute, hour);
+            case LAST_WEEKDAY -> String.format("0 %d %d LW * ?", minute, hour);
+            case SPECIFIC_DATE -> createSpecificDateCron(hour, minute, specificDate);
         };
-    }
-
-    private static String createHourlyCron(int minute) {
-        return String.format("0 %d * * * ?", minute);
-    }
-
-    private static String createDailyCron(int hour, int minute) {
-        return String.format("0 %d %d * * ?", minute, hour);
-    }
-
-    private static String createWeeklyCron(List<String> selectedDays, int hour, int minute) {
-        return String.format("0 %d %d ? * %s *", minute, hour, convertDaysToCronFormat(selectedDays));
-    }
-
-    private static String createMonthlyCron(List<String> selectedDays, int hour, int minute) {
-        return String.format("0 %d %d %s * ?", minute, hour, String.join(",", selectedDays));
-    }
-
-    private static String createYearlyCron(String date, int hour, int minute) {
-        String[] dateParts = date.split("-");
-        return String.format("0 %d %d %s %s ? *", minute, hour, dateParts[1], dateParts[0]);
-    }
-
-    private static String createFirstWeekdayCron(int hour, int minute) {
-        return String.format("0 %d %d 1W * ?", minute, hour);
-    }
-
-    private static String createLastWeekdayCron(int hour, int minute) {
-        return String.format("0 %d %d LW * ?", minute, hour);
-    }
-
-    private static String createSpecificDateCron(String date, int hour, int minute) {
-        String[] dateParts = date.split("-");
-        return String.format("0 %d %d %s %s ? %s", minute, hour, dateParts[2], dateParts[1], dateParts[0]);
-    }
-
-    private static String createLastDayOfMonthCron(int hour, int minute) {
-        return String.format("0 %d %d L * ?", minute, hour);
     }
 
     private static String convertDaysToCronFormat(List<String> days) {
         return days.stream()
                 .filter(DAYS_OF_WEEK::contains)
                 .collect(Collectors.joining(","));
+    }
+
+    private static String createSpecificDateCron(int hour, int minute, String specificDate) {
+        String[] dateParts = specificDate.split("-");
+        return String.format("0 %d %d %s %s ? %s", minute, hour, dateParts[2], dateParts[1], dateParts[0]);
+    }
+
+    private static String createYearlyCron(int hour, int minute, String specificDate) {
+        String[] dateParts = specificDate.split("-");
+        return String.format("0 %d %d %s %s ? *", minute, hour, dateParts[1], dateParts[0]);
     }
 
 }

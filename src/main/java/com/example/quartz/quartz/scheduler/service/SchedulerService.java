@@ -31,27 +31,27 @@ public class SchedulerService {
     private final TriggerService triggerService;
     private final ScheduleJobService scheduleJobService;
 
-    public void registerCronJob(CronJobSaveRequest request) {
+    public void registerJob(CronJobSaveRequest request) {
         ScheduleJob scheduleJob = scheduleJobService.saveJobDetail(request.scheduleJobSaveRequest());
         JobTrigger jobTrigger = triggerService.saveJobTrigger(request.jobTriggerSaveRequest());
         JobCronTrigger jobCronTrigger = triggerService.saveCronTrigger(request.cronTriggerSaveRequest());
 
-        scheduleAndPublishCronJob(scheduleJob, jobTrigger, jobCronTrigger);
+        scheduleAndPublish(scheduleJob, jobTrigger, jobCronTrigger);
         log.info("새로운 Job을 저장하고 큐에 메시지 전송");
     }
 
-    private void scheduleAndPublishCronJob(ScheduleJob scheduleJob, JobTrigger jobTrigger, JobCronTrigger jobCronTrigger) {
+    private void scheduleAndPublish(ScheduleJob scheduleJob, JobTrigger jobTrigger, JobCronTrigger jobCronTrigger) {
         try {
             scheduler.scheduleJobs(createScheduleJobs(scheduleJob, jobCronTrigger), true);
             publishJobSaveMessage(scheduleJob, jobTrigger, jobCronTrigger);
         } catch (SchedulerException e) {
-            throw new IllegalStateException("새로운 Job 저장에 실패: " + e.getMessage(), e);
+            throw new IllegalStateException("저장 실패: " + e.getMessage(), e);
         }
     }
 
     private Map<JobDetail, Set<? extends Trigger>> createScheduleJobs(ScheduleJob scheduleJob, JobCronTrigger jobCronTrigger) {
         JobDetail jobDetail = createJobDetail(scheduleJob);
-        Set<Trigger> triggers = createTriggersForJob(jobCronTrigger);
+        Set<Trigger> triggers = createTriggersForJob(scheduleJob.getJobName(), scheduleJob.getJobGroup(), jobCronTrigger);
         return Map.of(jobDetail, triggers);
     }
 
@@ -64,8 +64,8 @@ public class SchedulerService {
                 .build();
     }
 
-    private Set<Trigger> createTriggersForJob(JobCronTrigger jobCronTrigger) {
-        Trigger trigger = TriggerGenerator.createCronTrigger(jobCronTrigger);
+    private Set<Trigger> createTriggersForJob(String jobName, String jobGroup, JobCronTrigger jobCronTrigger) {
+        Trigger trigger = TriggerGenerator.createCronTrigger(jobName, jobGroup, jobCronTrigger);
         return Set.of(trigger);
     }
 

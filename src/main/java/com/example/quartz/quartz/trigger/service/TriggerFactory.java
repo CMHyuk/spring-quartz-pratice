@@ -33,7 +33,7 @@ public class TriggerFactory {
 
         JobCronTrigger jobCronTrigger = findJobCronTrigger(triggerName, triggerGroup);
 
-        return TriggerGenerator.createCronTrigger(jobCronTrigger);
+        return TriggerGenerator.createCronTrigger(jobTrigger.getJobName(), jobCronTrigger.getTriggerGroup(), jobCronTrigger);
     }
 
     private JobCronTrigger findJobCronTrigger(String triggerName, String triggerGroup) {
